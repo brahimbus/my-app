@@ -1,0 +1,167 @@
+<div
+  class="w-full p-4 sm:p-6 lg:p-8 font-sans bg-gray-900 min-h-screen text-gray-100 flex justify-center"
+>
+  <div class="max-w-5xl w-full">
+    <!-- Header with Date -->
+    <header class="mb-8 flex justify-between items-center">
+      <h1 class="text-3xl md:text-4xl font-bold text-blue-400">
+        Client Orders Management
+      </h1>
+      <p class="text-sm md:text-base text-gray-400">
+        Aujourd’hui: {{ today | date : "fullDate" }}
+      </p>
+    </header>
+
+    <!-- Client Selection -->
+    <div
+      class="mb-8 bg-gray-800 rounded-xl shadow-md p-6 border border-gray-700 hover:shadow-lg transition-shadow duration-200"
+    >
+      <label for="client" class="block text-sm font-medium text-gray-300 mb-2"
+        >Select Client:</label
+      >
+      <select
+        id="client"
+        [(ngModel)]="selectedClient"
+        (change)="onClientChange()"
+        class="w-full sm:w-64 p-3 border border-gray-600 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-gray-700 text-gray-100 text-base hover:bg-gray-600 transition-colors duration-200"
+      >
+        <option value="" disabled selected>Choose a client...</option>
+        <option *ngFor="let client of clients" [value]="client._id">
+          {{ client.nom }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Empty State -->
+    <div
+      *ngIf="commands.length === 0"
+      class="text-center p-8 border-2 border-dashed border-gray-600 rounded-xl bg-gray-800"
+    >
+      <p class="text-gray-400 text-lg">No orders found for this client.</p>
+      <p class="text-gray-500 text-sm mt-2">
+        Select a different client to view their orders.
+      </p>
+    </div>
+
+    <!-- Orders List -->
+    <div
+      *ngFor="let command of commands"
+      class="mb-8 bg-gray-800 shadow-md rounded-xl p-6 border border-gray-700 hover:border-blue-500 transition-colors duration-200"
+    >
+      <div
+        class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6"
+      >
+        <span class="text-sm text-gray-400">
+          Order Date: {{ command.date | date : "MMM d, y, h:mm a" }}</span
+        >
+      </div>
+
+      <div class="overflow-x-auto rounded-lg border border-gray-700">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-700">
+              <th class="p-4 text-left text-sm font-medium text-gray-300">
+                Product
+              </th>
+              <th class="p-4 text-left text-sm font-medium text-gray-300">
+                Price
+              </th>
+              <th class="p-4 text-left text-sm font-medium text-gray-300">
+                Quantity
+              </th>
+              <th class="p-4 text-left text-sm font-medium text-gray-300">
+                Total
+              </th>
+              <th class="p-4 text-left text-sm font-medium text-gray-300">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let ligne of command.lignes"
+              class="hover:bg-gray-600 transition-colors duration-150"
+            >
+              <td class="p-4 border-t border-gray-700 text-gray-100 text-base">
+                {{ ligne.produit.libelle }}
+              </td>
+              <td class="p-4 border-t border-gray-700 text-gray-100 text-base">
+                {{ ligne.produit.pu | number : "1.2-2" }} DH
+              </td>
+              <td class="p-4 border-t border-gray-700 text-gray-100 text-base">
+                {{ ligne.qte }}
+              </td>
+              <td
+                class="p-4 border-t border-gray-700 font-medium text-gray-100 text-base"
+              >
+                {{
+                  calculateLineTotal(ligne.produit.pu, ligne.qte)
+                    | number : "1.2-2"
+                }}
+                DH
+              </td>
+              <td class="p-4 border-t border-gray-700">
+                <div class="flex gap-2">
+                  <button
+                    class="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 active:bg-red-700 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 transition-colors duration-150"
+                    (click)="updateQuantity(command, ligne._id, -1)"
+                  >
+                    -
+                  </button>
+                  <button
+                    class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 active:bg-green-700 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors duration-150"
+                    (click)="updateQuantity(command, ligne._id, 1)"
+                  >
+                    +
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot class="bg-gray-700">
+            <tr>
+              <td
+                colspan="3"
+                class="p-4 text-right font-bold text-gray-100 text-base"
+              >
+                Order Total:
+              </td>
+              <td colspan="2" class="p-4 font-bold text-gray-100 text-base">
+                {{ calculateOrderTotal(command) | number : "1.2-2" }} DH
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div
+      *ngIf="commands.length > 0"
+      class="mt-8 pt-6 border-t border-gray-700 bg-gray-800 rounded-xl p-6 shadow-md"
+    >
+      <div class="space-y-4">
+        <div class="flex justify-between items-center text-lg">
+          <span class="text-gray-400">Total HT:</span>
+          <span class="font-medium text-gray-100"
+            >{{ calculateAllOrdersTotal() | number : "1.2-2" }} DH</span
+          >
+        </div>
+        <div class="flex justify-between items-center text-lg">
+          <span class="text-gray-400">VAT (20%):</span>
+          <span class="font-medium text-gray-100"
+            >{{ calculateAllOrdersTotal() * 0.2 | number : "1.2-2" }} DH</span
+          >
+        </div>
+        <div
+          class="flex justify-between items-center text-xl pt-4 border-t border-gray-700"
+        >
+          <span class="font-bold text-gray-100">Total TTC:</span>
+          <span class="font-bold text-blue-400"
+            >{{ calculateTotalTTC() | number : "1.2-2" }} DH</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
