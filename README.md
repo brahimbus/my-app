@@ -1,5 +1,5 @@
 Hi teacher,i'm very sorry for my absence — my iPhone was out of charge, so I didn’t get an alarm to wake up.
-
+Regarding the project:
 This is an Angular project I included also Tailwind CSS for styling.
 
 For the backend, the server.js file contains code that automatically inserts test data, so there's no need to do it manually.
