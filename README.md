@@ -5,7 +5,7 @@ This is an Angular project I included also Tailwind CSS for styling.
 For the backend, the server.js file contains code that automatically inserts test data, so there's no need to do it manually.
 
 Just connect MongoDB to:
-mongodb://localhost:27017/shopdb
+mongodb://localhost:27017/
 
 Then run the following commands:
 node server.js
